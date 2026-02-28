@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ProWash — Field Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+[data-theme="dark"] {
+  --bg:#0d0f0e;--surface:#161a18;--panel:#1e2420;--border:#2a3330;
+  --accent:#00d46e;--accent-dk:#009950;--accent-text:#000;
+  --warn:#f59e0b;--danger:#ef4444;--text:#e8ede9;--text-strong:#ffffff;
+  --muted:#6b7a72;--label:#9aab9e;--grid:rgba(0,212,110,0.04);
+  --shadow:rgba(0,0,0,0.4);--result:#1a2018;--input:#1e2420;--blue:#3b82f6;
+}
+[data-theme="light"] {
+  --bg:#eef3f0;--surface:#ffffff;--panel:#f5f9f6;--border:#cddad2;
+  --accent:#008f48;--accent-dk:#006b35;--accent-text:#ffffff;
+  --warn:#b45309;--danger:#dc2626;--text:#1c2e22;--text-strong:#0a1a10;
+  --muted:#5a7263;--label:#3d5c48;--grid:rgba(0,143,72,0.05);
+  --shadow:rgba(0,0,0,0.07);--result:#eaf4ee;--input:#f0f7f2;--blue:#1d4ed8;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-serif;min-height:100vh;overflow-x:hidden;transition:background .25s,color .25s;-webkit-font-smoothing:antialiased}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:36px 36px;pointer-events:none;z-index:0}
+.app{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:14px 14px 80px}
+
+/* HEADER */
+header{display:flex;align-items:center;justify-content:space-between;padding-bottom:14px;border-bottom:2px solid var(–border);margin-bottom:14px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:42px;height:42px;background:var(–accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.logo-text{font-size:28px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(–text-strong)}
+.logo-sub{font-size:10px;color:var(–muted);letter-spacing:3px;text-transform:uppercase;font-family:‘JetBrains Mono’,monospace}
+.theme-pill{display:flex;align-items:center;gap:6px;background:var(–panel);border:1.5px solid var(–border);border-radius:30px;padding:6px 14px;cursor:pointer;font-size:17px;user-select:none;transition:background .2s}
+.theme-pill:active{transform:scale(.95)}
+.theme-label{font-size:11px;font-family:‘JetBrains Mono’,monospace;color:var(–muted);letter-spacing:1px}
+
+/* TABS */
+.nav-tabs{display:flex;gap:3px;margin-bottom:14px;background:var(–surface);border-radius:10px;padding:4px;border:1.5px solid var(–border);box-shadow:0 2px 8px var(–shadow)}
+.tab-btn{flex:1;background:none;border:none;color:var(–muted);padding:10px 4px;font-family:‘Barlow Condensed’,sans-serif;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;border-radius:7px;transition:all .2s;line-height:1.2}
+.tab-btn.active{background:var(–accent);color:var(–accent-text)}
+.tab-btn:hover:not(.active){background:var(–panel);color:var(–text)}
+.tab-content{display:none}.tab-content.active{display:block}
+
+/* PANEL */
+.panel{background:var(–surface);border:1.5px solid var(–border);border-radius:10px;padding:16px;margin-bottom:12px;box-shadow:0 2px 10px var(–shadow)}
+.panel-hd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;padding-bottom:10px;border-bottom:1.5px solid var(–border)}
+.panel-title{font-size:16px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(–text-strong)}
+.panel-tag{background:var(–panel);border:1px solid var(–border);color:var(–muted);font-size:9px;font-family:‘JetBrains Mono’,monospace;padding:2px 7px;border-radius:3px;letter-spacing:1px;white-space:nowrap}
+
+/* FORMS */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group.span2{grid-column:1/-1}
+label{font-size:10px;font-family:‘JetBrains Mono’,monospace;color:var(–label);letter-spacing:1px;text-transform:uppercase;font-weight:700}
+input[type=“number”],input[type=“text”],textarea,select{background:var(–input);border:1.5px solid var(–border);color:var(–text);font-family:‘JetBrains Mono’,monospace;font-size:18px;font-weight:700;padding:11px 12px;border-radius:7px;outline:none;width:100%;transition:border-color .2s;-webkit-appearance:none;appearance:none}
+input:focus,textarea:focus,select:focus{border-color:var(–accent)}
+textarea{resize:vertical;min-height:70px;font-size:14px;font-weight:400;line-height:1.5}
+
+/* TOGGLE BUTTONS */
+.tog-row{display:grid;gap:6px}
+.tog-row.c2{grid-template-columns:1fr 1fr}
+.tog-row.c3{grid-template-columns:1fr 1fr 1fr}
+.tog-row.c4{grid-template-columns:1fr 1fr 1fr 1fr}
+.tog-row.c6{grid-template-columns:1fr 1fr 1fr}
+.tog-btn{background:var(–panel);border:2px solid var(–border);color:var(–muted);padding:10px 6px;font-family:‘Barlow Condensed’,sans-serif;font-size:13px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;border-radius:7px;transition:all .15s;text-align:center;line-height:1.3}
+.tog-btn small{display:block;font-size:10px;font-weight:400;letter-spacing:0;color:inherit;opacity:.7}
+.tog-btn.active{border-color:var(–accent);color:var(–accent);background:rgba(0,143,72,.1)}
+.tog-btn:active{transform:scale(.97)}
+
+/* BUTTONS */
+.btn{background:var(–accent);color:var(–accent-text);border:none;padding:13px 20px;font-family:‘Barlow Condensed’,sans-serif;font-size:16px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;border-radius:7px;transition:all .15s;display:inline-flex;align-items:center;justify-content:center;gap:6px;-webkit-appearance:none}
+.btn:active{transform:scale(.97);opacity:.9}
+.btn.outline{background:transparent;color:var(–accent);border:2px solid var(–accent)}
+.btn.danger{background:var(–danger);color:#fff}
+.btn.neutral{background:var(–panel);color:var(–text);border:1.5px solid var(–border)}
+.btn.sm{padding:8px 14px;font-size:13px}
+.btn.xs{padding:5px 10px;font-size:12px}
+.btn.full{width:100%}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap}
+
+/* EDIT MODAL */
+.modal-backdrop{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto}
+.modal-backdrop.open{display:flex}
+.modal-box{background:var(–surface);border:1.5px solid var(–border);border-radius:12px;padding:20px;width:100%;max-width:480px;box-shadow:0 8px 32px rgba(0,0,0,0.4);margin:auto}
+.modal-title{font-size:18px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(–text-strong);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.modal-close{background:none;border:none;color:var(–muted);font-size:22px;cursor:pointer;padding:0;line-height:1}
+.modal-section{margin-bottom:14px}
+.modal-section-title{font-size:11px;font-family:‘JetBrains Mono’,monospace;color:var(–label);letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(–border)}
+.edit-photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:8px}
+.edit-photo-card{border-radius:6px;overflow:hidden;aspect-ratio:4/3;position:relative;border:1.5px solid var(–border);background:var(–panel)}
+.edit-photo-card img{width:100%;height:100%;object-fit:cover;display:block}
+.edit-photo-del{position:absolute;top:3px;right:3px;background:rgba(0,0,0,0.65);color:#fff;border:none;border-radius:4px;width:22px;height:22px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center}
+.edit-photo-ov{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);font-size:9px;padding:3px 6px;font-family:‘JetBrains Mono’,monospace;color:#ddd}
+.add-photo-btn{border:2px dashed var(–border);border-radius:7px;padding:12px;text-align:center;cursor:pointer;font-family:‘JetBrains Mono’,monospace;color:var(–muted);font-size:12px;transition:border-color .2s;display:block}
+.add-photo-btn:active{border-color:var(–accent)}
+.add-photo-btn input{display:none}
+.job-note-item{display:flex;align-items:flex-start;gap:8px;background:var(–panel);border:1.5px solid var(–border);border-radius:6px;padding:10px 12px;margin-bottom:7px}
+.job-note-item-text{flex:1;font-size:14px;line-height:1.45}
+.job-note-meta{font-size:10px;font-family:‘JetBrains Mono’,monospace;color:var(–muted);margin-top:3px}
+
+/* RESULTS */
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.result-card{background:var(–result);border:1.5px solid var(–border);border-radius:8px;padding:12px;position:relative;overflow:hidden}
+.result-card::before{content:’’;position:absolute;top:0;left:0;right:0;height:3px;background:var(–accent)}
+.result-card.warn::before{background:var(–warn)}
+.result-card.blue::before{background:var(–blue)}
+.result-card.span2{grid-column:1/-1}
+.result-lbl{font-size:9px;font-family:‘JetBrains Mono’,monospace;color:var(–muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px}
+.result-val{font-size:34px;font-weight:900;color:var(–accent);line-height:1}
+.result-card.warn .result-val{color:var(–warn)}
+.result-card.blue .result-val{color:var(–blue)}
+.result-unit{font-size:11px;color:var(–muted);font-family:‘JetBrains Mono’,monospace;margin-top:3px}
+.ratio-bar{height:34px;border-radius:6px;overflow:hidden;display:flex;border:1.5px solid var(–border);margin-top:8px}
+.ratio-c{background:var(–warn);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#000;font-family:‘JetBrains Mono’,monospace;transition:width .4s;min-width:0;white-space:nowrap;overflow:hidden;padding:0 4px}
+.ratio-w{background:var(–blue);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#fff;font-family:‘JetBrains Mono’,monospace;flex:1;white-space:nowrap;overflow:hidden;padding:0 4px}
+.legend{display:flex;gap:14px;margin-top:6px}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;font-family:‘JetBrains Mono’,monospace;color:var(–muted)}
+.legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.steps{display:flex;flex-direction:column;gap:7px;margin-top:10px;counter-reset:step}
+.step{counter-increment:step;display:flex;align-items:flex-start;gap:10px;background:var(–panel);border:1.5px solid var(–border);border-radius:7px;padding:11px 13px;font-size:14px;line-height:1.45}
+.step::before{content:counter(step);background:var(–accent);color:var(–accent-text);min-width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:11px;margin-top:1px;flex-shrink:0}
+.warn-box{background:rgba(180,83,9,.1);border:1.5px solid rgba(180,83,9,.4);border-radius:7px;padding:11px 13px;font-size:13px;color:var(–warn);font-family:‘JetBrains Mono’,monospace;margin-top:10px;line-height:1.5}
+
+/* SHAPE BUILDER */
+.mode-bar{display:flex;gap:6px;margin-bottom:12px}
+.mode-btn{flex:1;background:var(–panel);border:2px solid var(–border);color:var(–muted);padding:11px 6px;font-family:‘Barlow Condensed’,sans-serif;font-size:14px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;border-radius:7px;transition:all .15s;text-align:center}
+.mode-btn small{display:block;font-size:10px;font-weight:400;opacity:.75}
+.mode-btn.active{border-color:var(–accent);color:var(–accent);background:rgba(0,143,72,.1)}
+.section-list{display:flex;flex-direction:column;gap:7px;margin-bottom:10px}
+.section-row{display:flex;align-items:center;gap:7px;background:var(–panel);border:1.5px solid var(–border);border-radius:7px;padding:10px 12px}
+.sec-lbl{font-size:13px;font-family:‘JetBrains Mono’,monospace;color:var(–accent);font-weight:700;min-width:20px;text-align:center}
+.sec-inputs{display:grid;grid-template-columns:1fr 1fr;gap:7px;flex:1}
+.sec-inputs input{font-size:16px;padding:8px 10px}
+.sec-sf{font-size:12px;font-weight:700;font-family:‘JetBrains Mono’,monospace;color:var(–accent);min-width:58px;text-align:right;white-space:nowrap}
+.del-btn{background:none;border:none;color:var(–danger);cursor:pointer;font-size:18px;padding:2px 4px;flex-shrink:0}
+.total-row{background:var(–result);border:2px solid var(–accent);border-radius:8px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.total-lbl{font-size:10px;font-family:‘JetBrains Mono’,monospace;color:var(–muted);letter-spacing:1.5px;text-transform:uppercase}
+.total-unit{font-size:11px;color:var(–muted);font-family:‘JetBrains Mono’,monospace}
+.total-val{font-size:30px;font-weight:900;color:var(–accent)}
+.direct-input{font-size:28px!important;font-weight:900!important;text-align:center;border-color:var(–accent)!important;color:var(–accent)!important}
+
+/* NOTES */
+.note-card{background:var(–panel);border:1.5px solid var(–border);border-left:4px solid var(–accent);border-radius:7px;padding:13px;margin-bottom:9px}
+.note-meta{font-size:10px;font-family:‘JetBrains Mono’,monospace;color:var(–muted);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.note-text{font-size:15px;line-height:1.5}
+.note-tag-badge{display:inline-block;font-size:9px;font-family:‘JetBrains Mono’,monospace;padding:2px 7px;border-radius:3px;background:rgba(0,143,72,.12);color:var(–accent);border:1px solid rgba(0,143,72,.3);margin-top:7px;letter-spacing:1px;text-transform:uppercase}
+.note-del{background:none;border:none;color:var(–danger);cursor:pointer;font-size:17px;padding:0}
+
+/* PHOTOS */
+.upload-zone{border:2px dashed var(–border);border-radius:9px;padding:26px;text-align:center;cursor:pointer;transition:border-color .2s;font-family:‘JetBrains Mono’,monospace;color:var(–muted);font-size:13px;margin-bottom:12px}
+.upload-zone:active{border-color:var(–accent);background:rgba(0,143,72,.04)}
+.upload-zone input{display:none}
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.photo-card{border-radius:7px;overflow:hidden;aspect-ratio:4/3;position:relative;border:1.5px solid var(–border);background:var(–panel)}
+.photo-card img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-del{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:4px;width:24px;height:24px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center}
+.photo-ov{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.55);font-size:9px;padding:3px 6px;font-family:‘JetBrains Mono’,monospace;color:#ddd}
+
+/* JOBS */
+.job-card{background:var(–panel);border:1.5px solid var(–border);border-radius:9px;padding:14px;margin-bottom:10px}
+.job-card-hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.job-name{font-size:19px;font-weight:900;color:var(–text-strong)}
+.job-date{font-size:10px;font-family:‘JetBrains Mono’,monospace;color:var(–muted)}
+.job-meta{font-size:12px;font-family:‘JetBrains Mono’,monospace;color:var(–muted);margin-bottom:6px;line-height:1.7}
+.job-mix{display:inline-flex;gap:10px;background:var(–result);border:1.5px solid var(–border);border-radius:6px;padding:8px 12px;font-family:‘JetBrains Mono’,monospace;font-size:12px;margin-bottom:8px;flex-wrap:wrap}
+.mix-item{display:flex;align-items:center;gap:4px}
+.mix-dot{width:8px;height:8px;border-radius:2px}
+
+/* UTILS */
+.divider{border:none;border-top:1.5px solid var(–border);margin:14px 0}
+.mt8{margin-top:8px}.mt12{margin-top:12px}
+.empty{text-align:center;padding:36px 20px;color:var(–muted);font-family:‘JetBrains Mono’,monospace;font-size:13px}
+.empty .em{font-size:38px;display:block;margin-bottom:10px}
+.phase2-card{background:var(–panel);border:2px dashed rgba(139,92,246,.35);border-radius:10px;padding:40px 20px;text-align:center}
+.phase2-card .em{font-size:54px;display:block;margin-bottom:12px}
+.phase2-card h2{font-size:22px;font-weight:900;letter-spacing:2px;color:#a78bfa;margin-bottom:8px}
+.phase2-card p{font-size:14px;line-height:1.6;color:var(–muted);max-width:340px;margin:0 auto 16px}
+.phase2-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.4);color:#a78bfa;font-size:11px;font-family:‘JetBrains Mono’,monospace;padding:5px 14px;border-radius:20px;letter-spacing:1px}
+</style>
+
+</head>
+<body>
+<div class="app">
+
+<!-- HEADER -->
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🚿</div>
+    <div>
+      <div class="logo-text">ProWash</div>
+      <div class="logo-sub">Field Calculator</div>
+    </div>
+  </div>
+  <div class="theme-pill" onclick="toggleTheme()">
+    <span id="themeIcon">🌙</span>
+    <span class="theme-label" id="themeLabel">DARK</span>
+  </div>
+</header>
+
+<!-- TABS -->
+
+<div class="nav-tabs">
+  <button class="tab-btn active" data-tab="calc" onclick="switchTab('calc',this)">⚗️ Calc</button>
+  <button class="tab-btn" data-tab="jobs" onclick="switchTab('jobs',this)">📋 Jobs</button>
+  <button class="tab-btn" data-tab="notes" onclick="switchTab('notes',this)">📝 Notes</button>
+  <button class="tab-btn" data-tab="photos" onclick="switchTab('photos',this)">📷 Photos</button>
+  <button class="tab-btn" data-tab="xmas" onclick="switchTab('xmas',this)">🎄 Lights</button>
+</div>
+
+<!-- ══════════════ CALC ══════════════ -->
+
+<div id="tab-calc" class="tab-content active">
+
+  <div class="panel">
+    <div class="panel-hd"><div class="panel-title">Service</div></div>
+    <div class="tog-row c2" style="margin-bottom:12px">
+      <button class="tog-btn active" id="svc-horizontal" onclick="setService('horizontal')">⬛ Horizontal<small>Driveways · Patios · Decks</small></button>
+      <button class="tog-btn" id="svc-vertical" onclick="setService('vertical')">▮ Vertical<small>Walls · Fences · Siding</small></button>
+    </div>
+    <div style="font-size:15px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text-strong);margin-bottom:8px">Surface</div>
+    <div class="tog-row c6">
+      <button class="tog-btn active" id="surf-concrete" onclick="setSurface('concrete')">🏗️<br>Concrete</button>
+      <button class="tog-btn" id="surf-wood" onclick="setSurface('wood')">🪵<br>Wood</button>
+      <button class="tog-btn" id="surf-vinyl" onclick="setSurface('vinyl')">🏠<br>Vinyl</button>
+      <button class="tog-btn" id="surf-brick" onclick="setSurface('brick')">🧱<br>Brick</button>
+      <button class="tog-btn" id="surf-roof" onclick="setSurface('roof')">🏚️<br>Roof</button>
+      <button class="tog-btn" id="surf-metal" onclick="setSurface('metal')">⚙️<br>Metal</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-hd">
+      <div class="panel-title">Area</div>
+      <span class="panel-tag" id="areaModeTag">MULTI-SECTION</span>
+    </div>
+    <div class="mode-bar">
+      <button class="mode-btn active" id="mode-sections" onclick="setAreaMode('sections')">➕ Build Sections<small>Add rectangles together</small></button>
+      <button class="mode-btn" id="mode-direct" onclick="setAreaMode('direct')">✏️ Enter Sq Ft<small>I'll do the math</small></button>
+    </div>
+
+```
+<!-- SECTIONS -->
+<div id="sectionsMode">
+  <div class="section-list" id="sectionList"></div>
+  <button class="btn outline full" onclick="addSection()" style="margin-bottom:10px">+ Add Section</button>
+  <div class="total-row">
+    <div><div class="total-lbl">Total Area</div><div class="total-unit">square feet</div></div>
+    <div class="total-val" id="totalAreaVal">0</div>
+  </div>
+</div>
+
+<!-- DIRECT -->
+<div id="directMode" style="display:none">
+  <div class="form-group">
+    <label>Total Square Footage</label>
+    <input type="number" class="direct-input" id="directSqft" placeholder="0" oninput="calculate()" inputmode="decimal" min="0">
+  </div>
+  <div style="font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:6px;line-height:1.5">
+    💡 Use for irregular shapes — laser measure, wheel, or your own estimate.
+  </div>
+</div>
+```
+
+  </div>
+
+  <div class="panel">
+    <div class="panel-hd"><div class="panel-title">Mix Settings</div></div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Tank Size (gal)</label>
+        <input type="number" id="tankSize" value="100" oninput="calculate()" min="1" inputmode="decimal">
+      </div>
+      <div class="form-group">
+        <label>SH Strength</label>
+        <select id="shSelect" onchange="calculate()">
+          <option value="6">6%</option>
+          <option value="10" selected>10%</option>
+          <option value="12">12%</option>
+          <option value="12.5">12.5%</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-hd">
+      <div class="panel-title">Results</div>
+      <span class="panel-tag" id="surfLabel">CONCRETE</span>
+    </div>
+    <div class="result-grid">
+      <div class="result-card span2">
+        <div class="result-lbl">Total Area</div>
+        <div class="result-val" id="res-sqft">—</div>
+        <div class="result-unit">square feet</div>
+      </div>
+      <div class="result-card warn">
+        <div class="result-lbl">☢️ Chlorine (SH)</div>
+        <div class="result-val" id="res-chl">—</div>
+        <div class="result-unit" id="res-chl-unit">oz</div>
+      </div>
+      <div class="result-card blue">
+        <div class="result-lbl">💧 Water</div>
+        <div class="result-val" id="res-water">—</div>
+        <div class="result-unit">gallons</div>
+      </div>
+      <div class="result-card span2">
+        <div class="result-lbl">Ratio — Chlorine : Water</div>
+        <div class="ratio-bar">
+          <div class="ratio-c" id="ratioC" style="width:10%">—</div>
+          <div class="ratio-w" id="ratioW">—</div>
+        </div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--warn)"></div>Chlorine (SH)</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>Water</div>
+        </div>
+      </div>
+    </div>
+    <div class="warn-box" id="surfWarn" style="display:none"></div>
+    <div class="divider"></div>
+    <div style="font-size:14px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text-strong);margin-bottom:8px">Mix Instructions</div>
+    <div class="steps" id="mixSteps"><div class="step">Enter area and tank size to generate instructions.</div></div>
+    <div class="divider"></div>
+    <button class="btn full" onclick="openSaveModal()">💾 Save to Job</button>
+  </div>
+</div>
+
+<!-- ══════════════ JOBS ══════════════ -->
+
+<div id="tab-jobs" class="tab-content">
+  <div class="panel">
+    <div class="panel-hd">
+      <div class="panel-title">Saved Jobs</div>
+      <button class="btn sm" onclick="switchTab('calc',document.querySelector('[data-tab=calc]'))">+ New Calc</button>
+    </div>
+    <div id="jobsList"></div>
+  </div>
+</div>
+
+<!-- ══════════════ NOTES ══════════════ -->
+
+<div id="tab-notes" class="tab-content">
+  <div class="panel">
+    <div class="panel-hd"><div class="panel-title">Add Note</div></div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label>Job / Customer Tag (optional)</label>
+      <input type="text" id="noteTag" placeholder="e.g. Smith Driveway" style="font-size:16px">
+    </div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label>Note</label>
+      <textarea id="noteText" placeholder="Surface condition, access info, customer notes..."></textarea>
+    </div>
+    <div class="tog-row c4" style="margin-bottom:10px">
+      <button class="tog-btn active" id="ncat-general" onclick="setNotecat('general')">📌<br><small>General</small></button>
+      <button class="tog-btn" id="ncat-surface" onclick="setNotecat('surface')">🧱<br><small>Surface</small></button>
+      <button class="tog-btn" id="ncat-customer" onclick="setNotecat('customer')">👤<br><small>Customer</small></button>
+      <button class="tog-btn" id="ncat-caution" onclick="setNotecat('caution')">⚠️<br><small>Caution</small></button>
+    </div>
+    <button class="btn full" onclick="addNote()">Add Note</button>
+  </div>
+  <div id="notesList"></div>
+</div>
+
+<!-- ══════════════ PHOTOS ══════════════ -->
+
+<div id="tab-photos" class="tab-content">
+  <div class="panel">
+    <div class="panel-hd"><div class="panel-title">Job Photos</div><span class="panel-tag">BEFORE / AFTER</span></div>
+    <div class="tog-row c2" style="margin-bottom:12px">
+      <button class="tog-btn active" id="ptype-before" onclick="setPhototype('before')">📸 Before</button>
+      <button class="tog-btn" id="ptype-after" onclick="setPhototype('after')">✅ After</button>
+    </div>
+    <label class="upload-zone" for="photoInput">
+      <div style="font-size:34px;margin-bottom:8px">📷</div>
+      <div style="font-weight:700;font-size:15px;color:var(--text)">Tap to add photo</div>
+      <div style="font-size:11px;margin-top:3px">Camera or photo library</div>
+      <input type="file" id="photoInput" accept="image/*" capture="environment" multiple onchange="handlePhotos(event)">
+    </label>
+    <div class="photo-grid" id="photoGrid"></div>
+    <div class="empty" id="photoEmpty"><span class="em">📷</span>No photos yet.</div>
+  </div>
+</div>
+
+<!-- ══════════════ XMAS ══════════════ -->
+
+<div id="tab-xmas" class="tab-content">
+  <div class="panel">
+    <div class="phase2-card">
+      <span class="em">🎄</span>
+      <h2>CHRISTMAS LIGHTS</h2>
+      <p>Pre-visualization, strand calculator, roofline estimator, and install planning — coming in Phase 2.</p>
+      <span class="phase2-badge">🚧 PHASE 2 — COMING SOON</span>
+      <p style="margin-top:14px;font-size:12px">Planned: roofline measurement, strand count, color layout preview, timer settings, install notes.</p>
+    </div>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<!-- EDIT JOB MODAL -->
+
+<div id="editModal" class="modal-backdrop">
+  <div class="modal-box">
+    <div class="modal-title">
+      ✏️ Edit Job
+      <button class="modal-close" onclick="closeEditModal()">✕</button>
+    </div>
+
+```
+<!-- Job info -->
+<div class="modal-section">
+  <div class="modal-section-title">Job Info</div>
+  <div class="form-group" style="margin-bottom:10px">
+    <label>Job Name / Address</label>
+    <input type="text" id="editJobName" style="font-size:16px">
+  </div>
+  <div class="form-group">
+    <label>Customer Name</label>
+    <input type="text" id="editCustomer" placeholder="Optional" style="font-size:16px">
+  </div>
+</div>
+
+<!-- Notes on this job -->
+<div class="modal-section">
+  <div class="modal-section-title">Job Notes</div>
+  <div id="editNotesList"></div>
+  <div class="form-group" style="margin-bottom:8px">
+    <label>Add a Note</label>
+    <textarea id="editNoteText" placeholder="Surface condition, return visit info, customer feedback..." style="min-height:60px"></textarea>
+  </div>
+  <div class="tog-row c4" style="margin-bottom:8px">
+    <button class="tog-btn active" id="encat-general" onclick="setEditNotecat('general')">📌<br><small>General</small></button>
+    <button class="tog-btn" id="encat-surface" onclick="setEditNotecat('surface')">🧱<br><small>Surface</small></button>
+    <button class="tog-btn" id="encat-customer" onclick="setEditNotecat('customer')">👤<br><small>Customer</small></button>
+    <button class="tog-btn" id="encat-caution" onclick="setEditNotecat('caution')">⚠️<br><small>Caution</small></button>
+  </div>
+  <button class="btn outline full" style="font-size:14px;padding:10px" onclick="addEditNote()">+ Add Note</button>
+</div>
+
+<!-- Photos on this job -->
+<div class="modal-section">
+  <div class="modal-section-title">Job Photos</div>
+  <div class="tog-row c2" style="margin-bottom:10px">
+    <button class="tog-btn active" id="eptype-before" onclick="setEditPhototype('before')">📸 Before</button>
+    <button class="tog-btn" id="eptype-after" onclick="setEditPhototype('after')">✅ After</button>
+  </div>
+  <div class="edit-photo-grid" id="editPhotoGrid"></div>
+  <label class="add-photo-btn" for="editPhotoInput">
+    📷 Add Photo
+    <input type="file" id="editPhotoInput" accept="image/*" capture="environment" multiple onchange="handleEditPhotos(event)">
+  </label>
+</div>
+
+<div class="btn-row" style="margin-top:4px">
+  <button class="btn full" onclick="saveEditModal()">✅ Save Changes</button>
+  <button class="btn neutral" onclick="closeEditModal()">Cancel</button>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- SAVE MODAL -->
+
+<div id="saveModal" class="modal-backdrop">
+  <div class="modal-box">
+    <div class="modal-title">💾 Save to Job</div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label>Job Name / Address *</label>
+      <input type="text" id="saveJobName" placeholder="e.g. 123 Main St — Driveway" style="font-size:16px">
+    </div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label>Customer Name (optional)</label>
+      <input type="text" id="saveCustomer" placeholder="e.g. John Smith" style="font-size:16px">
+    </div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label>Job Notes (optional)</label>
+      <textarea id="saveNotes" placeholder="Anything to remember about this job..." style="min-height:55px"></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn full" onclick="confirmSave()">✅ Save Job</button>
+      <button class="btn neutral" onclick="closeModal()" style="flex:0 0 auto">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ─── SURFACE DATA ───
+const SURF = {
+  concrete:{label:'Concrete', mix:3,    warn:null},
+  wood:    {label:'Wood/Deck',mix:1.5,  warn:'⚠️ Use lower pressure. Test a small area first — high concentration can damage wood fibers.'},
+  vinyl:   {label:'Vinyl',    mix:1,    warn:null},
+  brick:   {label:'Brick',    mix:2,    warn:'⚠️ Rinse thoroughly. Avoid acid-based cleaners on brick and mortar.'},
+  roof:    {label:'Roof',     mix:3,    warn:'⚠️ SOFT WASH ONLY — zero high pressure on shingles. Use downstream injection.'},
+  metal:   {label:'Metal',    mix:0.75, warn:'⚠️ Low concentration only — higher SH can cause oxidation and corrosion.'},
+};
+
+// ─── STATE ───
+const S = {
+  service:'horizontal', surface:'concrete', areaMode:'sections',
+  sections:[{id:1,l:'',w:''}],
+  notecat:'general', phototype:'before',
+};
+
+// ─── DATABASE (localStorage) ───
+const DB = {
+  jobs:   JSON.parse(localStorage.getItem('pw_jobs')  ||'[]'),
+  notes:  JSON.parse(localStorage.getItem('pw_notes') ||'[]'),
+  photos: JSON.parse(localStorage.getItem('pw_photos')||'[]'),
+};
+function persist(k){localStorage.setItem('pw_'+k,JSON.stringify(DB[k]))}
+
+// ─── THEME ───
+let dark = localStorage.getItem('pw_theme') === 'dark';
+
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  document.getElementById('themeIcon').textContent  = dark ? '☀️' : '🌙';
+  document.getElementById('themeLabel').textContent = dark ? 'LIGHT' : 'DARK';
+  localStorage.setItem('pw_theme', dark ? 'dark' : 'light');
+}
+
+function toggleTheme() {
+  dark = !dark;
+  applyTheme();
+}
+
+// ─── TABS ───
+function switchTab(name,btn){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(name==='jobs')  renderJobs();
+  if(name==='notes') renderNotes();
+  if(name==='photos')renderPhotos();
+}
+
+// ─── SERVICE / SURFACE ───
+function setService(v){
+  S.service=v;
+  document.querySelectorAll('[id^="svc-"]').forEach(b=>b.classList.remove('active'));
+  document.getElementById('svc-'+v).classList.add('active');
+  calculate();
+}
+function setSurface(v){
+  S.surface=v;
+  document.querySelectorAll('[id^="surf-"]').forEach(b=>b.classList.remove('active'));
+  document.getElementById('surf-'+v).classList.add('active');
+  document.getElementById('surfLabel').textContent=SURF[v].label.toUpperCase();
+  calculate();
+}
+
+// ─── AREA MODE ───
+function setAreaMode(mode){
+  S.areaMode=mode;
+  document.getElementById('mode-sections').classList.toggle('active',mode==='sections');
+  document.getElementById('mode-direct').classList.toggle('active',mode==='direct');
+  document.getElementById('sectionsMode').style.display=mode==='sections'?'block':'none';
+  document.getElementById('directMode').style.display=mode==='direct'?'block':'none';
+  document.getElementById('areaModeTag').textContent=mode==='sections'?'MULTI-SECTION':'DIRECT ENTRY';
+  calculate();
+}
+
+// ─── SECTIONS ───
+function addSection(){
+  S.sections.push({id:Date.now(),l:'',w:''});
+  renderSections();
+}
+function removeSection(id){
+  if(S.sections.length===1)return;
+  S.sections=S.sections.filter(s=>s.id!==id);
+  renderSections();calculate();
+}
+function updateSection(id,field,val){
+  const sec=S.sections.find(s=>s.id===id);
+  if(sec){sec[field]=val;}
+  calculate();
+  const el=document.getElementById('sf-'+id);
+  if(el){
+    const l=parseFloat(sec.l)||0,w=parseFloat(sec.w)||0;
+    el.textContent=(l&&w)?(l*w).toLocaleString()+' sf':'';
+  }
+}
+function renderSections(){
+  document.getElementById('sectionList').innerHTML=S.sections.map((sec,i)=>`
+    <div class="section-row">
+      <div class="sec-lbl">${String.fromCharCode(65+i)}</div>
+      <div class="sec-inputs">
+        <input type="number" inputmode="decimal" min="0" placeholder="Length ft" value="${sec.l}"
+          oninput="updateSection(${sec.id},'l',this.value)">
+        <input type="number" inputmode="decimal" min="0" placeholder="Width ft" value="${sec.w}"
+          oninput="updateSection(${sec.id},'w',this.value)">
+      </div>
+      <div class="sec-sf" id="sf-${sec.id}">${(parseFloat(sec.l)||0)*(parseFloat(sec.w)||0)>0?((parseFloat(sec.l)||0)*(parseFloat(sec.w)||0)).toLocaleString()+' sf':''}</div>
+      <button class="del-btn" onclick="removeSection(${sec.id})" ${S.sections.length===1?'style="opacity:.3;pointer-events:none"':''}>✕</button>
+    </div>
+  `).join('');
+}
+
+// ─── CALCULATE ───
+function getArea(){
+  if(S.areaMode==='direct') return parseFloat(document.getElementById('directSqft').value)||0;
+  return S.sections.reduce((sum,s)=>{
+    const l=parseFloat(s.l)||0,w=parseFloat(s.w)||0;
+    return sum+l*w;
+  },0);
+}
+function calculate(){
+  const area=getArea();
+  const tank=parseFloat(document.getElementById('tankSize').value)||100;
+  const sh  =parseFloat(document.getElementById('shSelect').value)||10;
+  const surf=SURF[S.surface];
+
+  document.getElementById('totalAreaVal').textContent=area>0?area.toLocaleString():'0';
+  document.getElementById('res-sqft').textContent=area>0?area.toLocaleString():'—';
+
+  if(!area){
+    ['res-chl','res-water'].forEach(id=>document.getElementById(id).textContent='—');
+    document.getElementById('res-chl-unit').textContent='oz';
+    document.getElementById('ratioC').style.width='10%';
+    document.getElementById('ratioC').textContent='—';
+    document.getElementById('ratioW').textContent='—';
+    document.getElementById('surfWarn').style.display='none';
+    document.getElementById('mixSteps').innerHTML='<div class="step">Enter area and tank size to generate instructions.</div>';
+    return;
+  }
+
+  const shGal=(surf.mix/100)*tank/(sh/100);
+  const shOz=shGal*128;
+  const waterGal=Math.max(0,tank-shGal);
+
+  document.getElementById('res-chl').textContent=shOz.toFixed(1);
+  document.getElementById('res-chl-unit').textContent=`oz  (${shGal.toFixed(2)} gal)`;
+  document.getElementById('res-water').textContent=waterGal.toFixed(1);
+
+  const pct=Math.min(92,Math.max(8,(shGal/tank)*100));
+  document.getElementById('ratioC').style.width=pct.toFixed(1)+'%';
+  document.getElementById('ratioC').textContent=shGal.toFixed(2)+' gal';
+  document.getElementById('ratioW').textContent=waterGal.toFixed(1)+' gal';
+
+  const wb=document.getElementById('surfWarn');
+  if(surf.warn){wb.textContent=surf.warn;wb.style.display='block';}
+  else wb.style.display='none';
+
+  document.getElementById('mixSteps').innerHTML=[
+    `Fill tank with <strong>${waterGal.toFixed(1)} gallons of water</strong> first — always water before SH.`,
+    `Add <strong>${shOz.toFixed(1)} oz (${shGal.toFixed(2)} gal)</strong> of ${sh}% Sodium Hypochlorite.`,
+    `Gently agitate. Target: <strong>${surf.mix}% SH concentration</strong> for ${surf.label}.`,
+    `Apply evenly across <strong>${area.toLocaleString()} sq ft</strong>. Dwell 5–10 minutes.`,
+    `Rinse thoroughly from top to bottom with clean water.`,
+    `Always wear PPE: gloves, eye protection, splash-resistant clothing.`,
+  ].map(s=>`<div class="step">${s}</div>`).join('');
+}
+
+// ─── SAVE MODAL ───
+function openSaveModal() {
+  if (!getArea()) { alert('Enter area first.'); return; }
+  document.getElementById('saveModal').classList.add('open');
+  setTimeout(() => document.getElementById('saveJobName').focus(), 100);
+}
+function closeModal() {
+  document.getElementById('saveModal').classList.remove('open');
+}
+
+function confirmSave(){
+  const name=document.getElementById('saveJobName').value.trim();
+  if(!name){alert('Please enter a job name.');return;}
+
+  const area=getArea();
+  const tank=parseFloat(document.getElementById('tankSize').value)||100;
+  const sh  =parseFloat(document.getElementById('shSelect').value)||10;
+  const surf=SURF[S.surface];
+  const shGal=(surf.mix/100)*tank/(sh/100);
+  const shOz=shGal*128;
+  const waterGal=Math.max(0,tank-shGal);
+
+  DB.jobs.unshift({
+    id:Date.now(),name,
+    customer:document.getElementById('saveCustomer').value.trim(),
+    notes:   document.getElementById('saveNotes').value.trim(),
+    date:    new Date().toLocaleDateString(),
+    service: S.service, surface:S.surface,
+    areaMode:S.areaMode, sections:[...S.sections],
+    area,tank,sh,mixPct:surf.mix,
+    shOz:shOz.toFixed(1), shGal:shGal.toFixed(2), waterGal:waterGal.toFixed(1),
+  });
+  persist('jobs');
+  closeModal();
+  ['saveJobName','saveCustomer','saveNotes'].forEach(id=>document.getElementById(id).value='');
+  switchTab('jobs',document.querySelector('[data-tab="jobs"]'));
+}
+
+// ─── JOBS ───
+function renderJobs(){
+  const el=document.getElementById('jobsList');
+  if(!DB.jobs.length){
+    el.innerHTML='<div class="empty"><span class="em">📋</span>No saved jobs yet.<br>Run a calc and hit Save to Job.</div>';
+    return;
+  }
+  el.innerHTML=DB.jobs.map((j,i)=>`
+    <div class="job-card">
+      <div class="job-card-hd">
+        <div>
+          <div class="job-name">${j.name}</div>
+          ${j.customer?`<div style="font-size:13px;color:var(--muted);font-family:'JetBrains Mono',monospace">👤 ${j.customer}</div>`:''}
+        </div>
+        <div style="text-align:right">
+          <div class="job-date">${j.date}</div>
+          <div style="display:flex;gap:6px;margin-top:6px;justify-content:flex-end">
+            <button class="btn sm" onclick="openEditModal(${i})">✏️ Edit</button>
+            <button class="btn danger xs" onclick="deleteJob(${i})">✕</button>
+          </div>
+        </div>
+      </div>
+      <div class="job-meta">📐 ${j.area.toLocaleString()} sq ft &nbsp;·&nbsp; ${j.service.toUpperCase()} &nbsp;·&nbsp; ${SURF[j.surface]?.label||j.surface}<br>🧪 ${j.sh}% SH &nbsp;·&nbsp; Tank: ${j.tank} gal</div>
+      <div class="job-mix">
+        <div class="mix-item"><div class="mix-dot" style="background:var(--warn)"></div><strong>${j.shOz} oz SH</strong>&nbsp;(${j.shGal} gal)</div>
+        <div class="mix-item"><div class="mix-dot" style="background:var(--blue)"></div><strong>${j.waterGal} gal</strong>&nbsp;water</div>
+        <div class="mix-item">🎯 ${j.mixPct}% mix</div>
+      </div>
+      ${j.notes?`<div style="font-size:13px;color:var(--muted);line-height:1.5;padding-top:8px;border-top:1px solid var(--border)">📝 ${j.notes}</div>`:''}
+      ${(j.jobNotes&&j.jobNotes.length)?`
+        <div style="padding-top:8px;border-top:1px solid var(--border)">
+          ${j.jobNotes.slice(0,2).map(n=>`<div style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:4px">📌 ${n.text}</div>`).join('')}
+          ${j.jobNotes.length>2?`<div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--muted)">+${j.jobNotes.length-2} more note${j.jobNotes.length-2>1?'s':''}</div>`:''}
+        </div>`:''}
+      <div style="display:flex;gap:10px;margin-top:8px;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--muted)">
+        ${(j.jobPhotos&&j.jobPhotos.length)?`<span>📷 ${j.jobPhotos.length} photo${j.jobPhotos.length>1?'s':''}</span>`:''}
+        ${j.edited?`<span>Edited ${j.edited}</span>`:''}
+      </div>
+    </div>
+  `).join('');
+}
+function deleteJob(i){
+  if(!confirm('Delete this job?'))return;
+  DB.jobs.splice(i,1);persist('jobs');renderJobs();
+}
+
+// ─── NOTES ───
+function setNotecat(c){
+  S.notecat=c;
+  document.querySelectorAll('[id^="ncat-"]').forEach(b=>b.classList.remove('active'));
+  document.getElementById('ncat-'+c).classList.add('active');
+}
+function addNote(){
+  const text=document.getElementById('noteText').value.trim();
+  if(!text){alert('Enter a note first.');return;}
+  DB.notes.unshift({id:Date.now(),tag:document.getElementById('noteTag').value.trim(),text,cat:S.notecat,date:new Date().toLocaleString()});
+  persist('notes');
+  document.getElementById('noteText').value='';
+  renderNotes();
+}
+function renderNotes(){
+  const el=document.getElementById('notesList');
+  if(!DB.notes.length){el.innerHTML='<div class="empty"><span class="em">📝</span>No notes yet.</div>';return;}
+  const icons={general:'📌',surface:'🧱',customer:'👤',caution:'⚠️'};
+  el.innerHTML=DB.notes.map((n,i)=>`
+    <div class="note-card">
+      <div class="note-meta">
+        <span>${icons[n.cat]||'📌'} ${n.tag||'No Tag'} · ${n.date}</span>
+        <button class="note-del" onclick="deleteNote(${i})">✕</button>
+      </div>
+      <div class="note-text">${n.text}</div>
+      <span class="note-tag-badge">${n.cat.toUpperCase()}</span>
+    </div>
+  `).join('');
+}
+function deleteNote(i){DB.notes.splice(i,1);persist('notes');renderNotes();}
+
+// ─── PHOTOS ───
+function setPhototype(t){
+  S.phototype=t;
+  document.querySelectorAll('[id^="ptype-"]').forEach(b=>b.classList.remove('active'));
+  document.getElementById('ptype-'+t).classList.add('active');
+}
+function handlePhotos(e){
+  Array.from(e.target.files).forEach(file=>{
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      DB.photos.unshift({id:Date.now(),src:ev.target.result,type:S.phototype,name:file.name,date:new Date().toLocaleString()});
+      persist('photos');renderPhotos();
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value='';
+}
+function renderPhotos(){
+  const grid=document.getElementById('photoGrid'),empty=document.getElementById('photoEmpty');
+  if(!DB.photos.length){grid.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  grid.innerHTML=DB.photos.map((p,i)=>`
+    <div class="photo-card">
+      <img src="${p.src}" alt="${p.name}">
+      <button class="photo-del" onclick="deletePhoto(${i})">✕</button>
+      <div class="photo-ov">${p.type.toUpperCase()} · ${p.date.split(',')[0]}</div>
+    </div>
+  `).join('');
+}
+function deletePhoto(i){DB.photos.splice(i,1);persist('photos');renderPhotos();}
+
+// ─── EDIT MODAL ───
+let editIdx = null;
+let editNotecat = 'general';
+let editPhototype = 'before';
+
+function openEditModal(i) {
+  editIdx = i;
+  editNotecat = 'general';
+  editPhototype = 'before';
+  const j = DB.jobs[i];
+
+  // Populate fields
+  document.getElementById('editJobName').value = j.name || '';
+  document.getElementById('editCustomer').value = j.customer || '';
+  document.getElementById('editNoteText').value = '';
+
+  // Reset note category buttons
+  document.querySelectorAll('[id^="encat-"]').forEach(b => b.classList.remove('active'));
+  document.getElementById('encat-general').classList.add('active');
+  document.querySelectorAll('[id^="eptype-"]').forEach(b => b.classList.remove('active'));
+  document.getElementById('eptype-before').classList.add('active');
+
+  renderEditNotes();
+  renderEditPhotos();
+  document.getElementById('editModal').classList.add('open');
+  setTimeout(() => document.getElementById('editJobName').focus(), 100);
+}
+
+function closeEditModal() {
+  document.getElementById('editModal').classList.remove('open');
+  editIdx = null;
+}
+
+function setEditNotecat(c) {
+  editNotecat = c;
+  document.querySelectorAll('[id^="encat-"]').forEach(b => b.classList.remove('active'));
+  document.getElementById('encat-' + c).classList.add('active');
+}
+
+function setEditPhototype(t) {
+  editPhototype = t;
+  document.querySelectorAll('[id^="eptype-"]').forEach(b => b.classList.remove('active'));
+  document.getElementById('eptype-' + t).classList.add('active');
+}
+
+function addEditNote() {
+  const text = document.getElementById('editNoteText').value.trim();
+  if (!text) { alert('Enter a note first.'); return; }
+  const j = DB.jobs[editIdx];
+  if (!j.jobNotes) j.jobNotes = [];
+  j.jobNotes.push({ id: Date.now(), text, cat: editNotecat, date: new Date().toLocaleString() });
+  persist('jobs');
+  document.getElementById('editNoteText').value = '';
+  renderEditNotes();
+}
+
+function deleteEditNote(noteId) {
+  const j = DB.jobs[editIdx];
+  j.jobNotes = (j.jobNotes || []).filter(n => n.id !== noteId);
+  persist('jobs');
+  renderEditNotes();
+}
+
+function renderEditNotes() {
+  const el = document.getElementById('editNotesList');
+  const j = DB.jobs[editIdx];
+  const notes = j.jobNotes || [];
+  const icons = { general:'📌', surface:'🧱', customer:'👤', caution:'⚠️' };
+  if (!notes.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--muted);font-family:\'JetBrains Mono\',monospace;margin-bottom:8px">No notes yet — add one below.</div>';
+    return;
+  }
+  el.innerHTML = notes.map(n => `
+    <div class="job-note-item">
+      <div style="flex:1">
+        <div class="job-note-item-text">${icons[n.cat]||'📌'} ${n.text}</div>
+        <div class="job-note-meta">${n.cat.toUpperCase()} · ${n.date}</div>
+      </div>
+      <button class="del-btn" onclick="deleteEditNote(${n.id})">✕</button>
+    </div>
+  `).join('');
+}
+
+function handleEditPhotos(e) {
+  Array.from(e.target.files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const j = DB.jobs[editIdx];
+      if (!j.jobPhotos) j.jobPhotos = [];
+      j.jobPhotos.push({ id: Date.now(), src: ev.target.result, type: editPhototype, name: file.name, date: new Date().toLocaleString() });
+      persist('jobs');
+      renderEditPhotos();
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = '';
+}
+
+function deleteEditPhoto(photoId) {
+  const j = DB.jobs[editIdx];
+  j.jobPhotos = (j.jobPhotos || []).filter(p => p.id !== photoId);
+  persist('jobs');
+  renderEditPhotos();
+}
+
+function renderEditPhotos() {
+  const grid = document.getElementById('editPhotoGrid');
+  const j = DB.jobs[editIdx];
+  const photos = j.jobPhotos || [];
+  if (!photos.length) { grid.innerHTML = ''; return; }
+  grid.innerHTML = photos.map(p => `
+    <div class="edit-photo-card">
+      <img src="${p.src}" alt="${p.name}">
+      <button class="edit-photo-del" onclick="deleteEditPhoto(${p.id})">✕</button>
+      <div class="edit-photo-ov">${p.type.toUpperCase()}</div>
+    </div>
+  `).join('');
+}
+
+function saveEditModal() {
+  const name = document.getElementById('editJobName').value.trim();
+  if (!name) { alert('Job name is required.'); return; }
+  const j = DB.jobs[editIdx];
+  j.name     = name;
+  j.customer = document.getElementById('editCustomer').value.trim();
+  j.edited   = new Date().toLocaleString();
+  persist('jobs');
+  closeEditModal();
+  renderJobs();
+}
+
+// ─── INIT ───
+applyTheme();
+renderSections();
+calculate();
+renderNotes();
+renderPhotos();
+document.getElementById('saveModal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+document.getElementById('editModal').addEventListener('click', function(e) { if (e.target === this) closeEditModal(); });
+</script>
+
+</body>
+</html>
