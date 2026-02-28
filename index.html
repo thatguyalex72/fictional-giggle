@@ -713,7 +713,7 @@ function renderJobs(){
           <div class="job-date">${j.date}</div>
           <div style="display:flex;gap:6px;margin-top:6px;justify-content:flex-end">
             <button class="btn sm" onclick="openEditModal(${i})">✏️ Edit</button>
-            <button class="btn danger xs" onclick="deleteJob(${i})">✕</button>
+            <button class="btn danger xs" data-delete-job="${i}" onclick="deleteJob(${i})">✕</button>
           </div>
         </div>
       </div>
@@ -737,8 +737,21 @@ function renderJobs(){
   `).join('');
 }
 function deleteJob(i){
-  if(!confirm('Delete this job?'))return;
-  DB.jobs.splice(i,1);persist('jobs');renderJobs();
+  const j = DB.jobs[i];
+  if (!j) return;
+  const btn = document.querySelector(`[data-delete-job="${i}"]`);
+  if (btn && btn.dataset.armed !== 'true') {
+    btn.dataset.armed = 'true';
+    btn.textContent = 'Tap again';
+    btn.style.background = 'var(--danger)';
+    setTimeout(() => {
+      if (btn) { btn.dataset.armed = 'false'; btn.textContent = '✕'; btn.style.background = ''; }
+    }, 2500);
+    return;
+  }
+  DB.jobs.splice(i, 1);
+  persist('jobs');
+  renderJobs();
 }
 
 // ─── NOTES ───
